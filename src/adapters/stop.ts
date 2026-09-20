@@ -15,6 +15,7 @@
  *   3. 官方另有「连续 8 次拦截后强制放行」的兜底
  */
 
+import type { CheckReport } from '../core/check.js'
 import { formatReports } from '../core/format.js'
 import { changedFiles } from './changed.js'
 import { emitContext, guardFiles, readStdin } from './shared.js'
@@ -33,26 +34,46 @@ function writeBlock(reason: string): void {
 }
 
 async function main(): Promise<void> {
-  const raw = await readStdin()
-  if (!raw.trim()) {
+  const cwd = await stopCwd()
+  if (cwd === null) {
     return
   }
 
-  const payload = JSON.parse(raw) as StopPayload
-  if (payload.stop_hook_active) {
-    return
-  }
-
-  const cwd = payload.cwd ?? process.cwd()
   const files = changedFiles(cwd)
   if (files.length === 0) {
     return
   }
 
   const { reports, failures } = await guardFiles(files, cwd)
+  report(reports, failures)
+}
+
+/**
+ * 该从哪个目录找改动。
+ *
+ * 返回 null 表示这次不该做事：没输入、这次触发本身是「被上一个 Stop 拦下后继续」
+ * （`stop_hook_active`，防死循环的关键）。
+ */
+async function stopCwd(): Promise<string | null> {
+  const raw = await readStdin()
+  if (!raw.trim()) {
+    return null
+  }
+
+  const payload = JSON.parse(raw) as StopPayload
+  return payload.stop_hook_active ? null : (payload.cwd ?? process.cwd())
+}
+
+/**
+ * 把结果说出去。
+ *
+ * 三条出口，按「该不该拦」选：
+ *   error   拦住不让收工（decision: block）
+ *   其余    只提示（additionalContext），不拦
+ *   全没查成 也必须说 —— 静默放行的话，一道已经废掉的门会一直「通过」下去
+ */
+function report(reports: CheckReport[], failures: string[]): void {
   if (reports.length === 0) {
-    // 一个报告都没有，但有失败 —— 说明这道门已经废了（key 过期、接口挂了）。
-    // 静默放行的话，它会一直「通过」下去而没人知道
     if (failures.length > 0) {
       emitContext('Stop', `jev-guard 没能检查成任何文件：\n  ${failures.join('\n  ')}`)
     }
@@ -60,15 +81,14 @@ async function main(): Promise<void> {
   }
 
   const text = formatReports(reports, failures)
-  // 口径与 CLI 的退出码一致：只有 error 才拦人。
-  // 曾经在这里自定过一条 0.8 的线，结果 0.8~0.9 这段（正好落在 warning 区间）
-  // 会被拦下、在 CLI 里却放行 —— 两条链路对同一份结果给出相反的判断，本身就是坑
+  // 口径与 CLI 的退出码一致：只有 error 才拦人。曾经在这里自定过一条 0.8 的线，
+  // 结果 0.8~0.9（正好是 warning 区间）会被拦下、在 CLI 里却放行 ——
+  // 两条链路对同一份结果给出相反判断，本身就是坑
   const canBlock = reports.some(r => r.violations.some(v => v.severity === 'error'))
 
   if (canBlock) {
     writeBlock(`${text}\n（以上由 jev-guard 逐函数检查得出）`)
   } else {
-    // 拦不住的场合也把话说出来：标成 Stop hook feedback，不显示成 hook error
     emitContext('Stop', text)
   }
 }

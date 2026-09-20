@@ -22,6 +22,15 @@ import { isCodeFile } from '../core/file-kind.js'
 /** 最多审这么多文件。超了说明这个仓库的未提交改动多半不是本轮产生的，宁可不审 */
 const MAX_FILES = 20
 
+/**
+ * porcelain 每行的固定宽度：两个状态字符 + 一个空格。
+ *
+ * 写成常量而不是散落的 2 和 3 —— 那两个数看着像魔法数字，实际是格式定义的一部分，
+ * 但只有给了名字才看得出这一点。
+ */
+const STATUS_WIDTH = 2
+const PATH_START = 3
+
 /** 跑一条 git 命令。不是 git 仓库时 git 会往 stderr 喷一堆，这里不需要转达 */
 function git(cwd: string, args: string[]): string {
   return execFileSync('git', args, {
@@ -65,8 +74,8 @@ function pathsOf(raw: string): string[] {
     if (!entry) {
       continue
     }
-    const status = entry.slice(0, 2)
-    out.push(entry.slice(3))
+    const status = entry.slice(0, STATUS_WIDTH)
+    out.push(entry.slice(PATH_START))
     if (status.startsWith('R') || status.startsWith('C')) {
       i++
     }

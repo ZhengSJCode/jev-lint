@@ -56,7 +56,7 @@ export async function checkSource(
     warning: options.warningThreshold ?? DEFAULT_WARNING,
     error: options.errorThreshold ?? DEFAULT_ERROR,
   }
-  const client = createClient(options)
+  const client = options.client ?? createClient(options)
   const model = options.model ?? DEFAULT_MODEL
   const concurrency = DEFAULT_CONCURRENCY
 
@@ -102,24 +102,27 @@ async function checkWholeFile(
 
   try {
     const all = source.split('\n')
-    const lineCount = all.length
-    const file: FileSlice = {
-      path: fileName,
-      numbered: all
-        .slice(0, MAX_FILE_LINES)
-        .map((text, i) => `${i + 1}\t${text}`)
-        .join('\n'),
-    }
-
+    const file = numberedFile(fileName, all)
     const scores = await askFile(client, file, request.fileRules, request.rubric, request.model)
 
     return {
-      violations: toViolations(fileName, 1, lineCount, scores, request.fileRules, request.lines),
+      violations: toViolations(fileName, 1, all.length, scores, request.fileRules, request.lines),
       failure: [],
     }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
     return { violations: [], failure: [`${fileName}（文件级）: ${reason}`] }
+  }
+}
+
+/** 带行号的全文。太长就截断 —— 判断「放对地方没有」不需要读完整份 */
+function numberedFile(fileName: string, lines: string[]): FileSlice {
+  return {
+    path: fileName,
+    numbered: lines
+      .slice(0, MAX_FILE_LINES)
+      .map((text, i) => `${i + 1}\t${text}`)
+      .join('\n'),
   }
 }
 

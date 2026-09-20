@@ -1,3 +1,5 @@
+import type { TypeSafeClient } from '@typesafe-ai/sdk'
+
 /**
  * 三条链路上的公共类型：源码 → 函数片段 → 违规。
  *
@@ -64,6 +66,13 @@ export interface Violation {
 
 /** 一次检查的配置 */
 export interface GuardOptions {
+  /**
+   * 已建好的客户端，给了就用它、不再自己造。
+   *
+   * 存在是为了可测：`checkSource` 内部 new 一个具体实现的话，
+   * 测它就只能打真实接口。给了 client 时 apiKey 可以省。
+   */
+  client?: TypeSafeClient
   apiKey: string
   baseUrl?: string
   model?: string

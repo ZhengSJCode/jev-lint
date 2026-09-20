@@ -150,7 +150,7 @@ function parseRules(md: string): RuleSet {
       continue
     }
     if (draft) {
-      readField(line, draft)
+      Object.assign(draft, readField(line) ?? {})
     }
   }
   flush()
@@ -186,26 +186,34 @@ interface Draft {
   threshold?: number
 }
 
-function readField(line: string, draft: Draft): void {
+/**
+ * 解析一行字段，返回它给 draft 带来的增量。
+ *
+ * 返回值而不是就地改传入的 draft：`readField(line, draft)` 那种写法里，
+ * 数据流是藏起来的 —— 调用处看不出 draft 会被改写。
+ */
+function readField(line: string): Partial<Draft> | null {
   const field = line.match(/^-\s*(标题|提问|标准|范围|阈值)\s*[:：]\s*(.+?)\s*$/)
   if (!field) {
-    return
+    return null
   }
-  if (field[1] === '标题') {
-    draft.title = field[2]
-  } else if (field[1] === '提问') {
-    draft.question = field[2]
-  } else if (field[1] === '阈值') {
+  const [, name, value] = field
+
+  if (name === '标题') {
+    return { title: value }
+  }
+  if (name === '提问') {
+    return { question: value }
+  }
+  if (name === '阈值') {
     // 解析不出数字就当作没写，落到全局线 —— 一个打错的数值不该让整条规则罢工
-    const value = Number(field[2])
-    if (Number.isFinite(value)) {
-      draft.threshold = value
-    }
-  } else if (field[1] === '范围') {
+    const threshold = Number(value)
+    return Number.isFinite(threshold) ? { threshold } : null
+  }
+  if (name === '范围') {
     // 只认「文件」二字，其余一律当函数级 —— 打错一个字就静默变成另一条规则，
     // 比退回默认值更糟，所以这里不做模糊匹配
-    draft.scope = field[2] === '文件' ? 'file' : 'function'
-  } else {
-    draft.standard = field[2]
+    return { scope: value === '文件' ? 'file' : 'function' }
   }
+  return { standard: value }
 }

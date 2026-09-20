@@ -122,32 +122,49 @@ function reviewChangedFiles(on: On, sourceOf: () => FileSource): void {
       return next(e)
     }
 
-    try {
-      const cwd = await $.session.cwd()
+    // `$` 的三个能力在调用点各自绑定后传进去 —— `$` 本身不能传出调用点，
+    // 所以抽出去的是「拿到能力之后干什么」
+    const text = await reviewTurn({
+      reason: e.reason,
+      source: sourceOf(),
+      cwd: () => $.session.cwd(),
+      run: (argv, init) => $.process.run(argv, init),
+      cli: `${$.plugin.root}/dist/index.js`,
+    })
 
-      // 先取再判断：中断、拒绝、报错的轮次也要把累积清掉，
-      // 否则它改到一半的文件会被算进下一轮的账上
-      const files = await sourceOf().files({
-        cwd,
-        run: argv => $.process.run(argv, { cwd }),
-      })
-
-      if (!shouldReview(e.reason, files)) {
-        return next(e)
-      }
-
-      const text = await guard(
-        // `$` 只在调用点这样用 —— 下面这条注释贴在上面那次，这次也别忘
-        (argv, init) => $.process.run(argv, init),
-        `${$.plugin.root}/dist/index.js`,
-        files,
-      )
-      return text === null ? next(e) : { text }
-    } catch {
-      // 审查本身出问题（CLI 挂了、接口超时）不该影响这一轮的收尾
-      return next(e)
-    }
+    return text === null ? next(e) : { text }
   })
+}
+
+/** 汇总后的一条命中：违规字段 + 它来自哪个文件 */
+type Hit = Report['violations'][number] & { file: string }
+
+interface TurnDeps {
+  reason: string
+  source: FileSource
+  cwd: () => Promise<string>
+  run: RunCli
+  cli: string
+}
+
+/**
+ * 一轮结束后的审查。任何失败都不往上冒 —— 它是收尾动作，
+ * 挂了不该影响这一轮本身（CLI 挂了、接口超时都算）。
+ */
+async function reviewTurn(deps: TurnDeps): Promise<string | null> {
+  try {
+    // 先取再判断：中断、拒绝、报错的轮次也要把累积清掉，
+    // 否则它改到一半的文件会被算进下一轮的账上
+    const cwd = await deps.cwd()
+    const files = await deps.source.files({ cwd, run: deps.run })
+
+    if (!shouldReview(deps.reason, files)) {
+      return null
+    }
+    return await guard(deps.run, deps.cli, files)
+  } catch {
+    return null
+  }
 }
 
 /** 中断、拒绝、报错三种收尾里代码多半没改完，审了只会添乱 */
@@ -209,33 +226,40 @@ function render(reports: Report[], scanned: number, failures: string[] = []): st
     return null
   }
 
-  // 分两档列：error 是必须改的，warning 只是建议看
-  const body = (['error', 'warning'] as const).flatMap(severity => {
-    const group = hits.filter(hit => hit.severity === severity)
-    if (group.length === 0) return []
-    const label = severity === 'error' ? '必须改' : '建议看'
-    return [
-      `  ${severity}（${label}）`,
-      ...group.slice(0, MAX_HITS).map(hit => {
-        const name = hit.file.split('/').pop()
-        return `    ${hit.confidence.toFixed(2)}  ${name}:${hit.startLine}-${hit.endLine}  ${hit.title}  ${hit.target}`
-      }),
-    ]
-  })
-
-  const trouble = failures.length
-    ? [
-        `  ! ${failures.length} 个文件没检查成（上述结果不完整）：`,
-        ...failures.map(f => `    ${f}`),
-      ]
-    : []
-
   return [
     `jev-guard 审了 ${scanned} 个改动文件，命中 ${hits.length} 条：`,
-    ...body,
-    ...trouble,
+    // 分两档列：error 是必须改的，warning 只是建议看
+    ...renderSeverity(hits, 'error', '必须改'),
+    ...renderSeverity(hits, 'warning', '建议看'),
+    ...renderFailures(failures),
     '（以上由 jev-guard 逐函数检查得出，规则见 rules.md）',
   ].join('\n')
+}
+
+/** 渲染一档。这一档没有命中就返回空数组，让调用方直接展开 */
+function renderSeverity(hits: Hit[], severity: 'error' | 'warning', label: string): string[] {
+  const group = hits.filter(hit => hit.severity === severity)
+  if (group.length === 0) {
+    return []
+  }
+  return [
+    `  ${severity}（${label}）`,
+    ...group.slice(0, MAX_HITS).map(hit => {
+      const name = hit.file.split('/').pop()
+      return `    ${hit.confidence.toFixed(2)}  ${name}:${hit.startLine}-${hit.endLine}  ${hit.title}  ${hit.target}`
+    }),
+  ]
+}
+
+/** 没检查成的文件 —— 不说的话，它的「没有命中」会被当成「通过」 */
+function renderFailures(failures: string[]): string[] {
+  if (failures.length === 0) {
+    return []
+  }
+  return [
+    `  ! ${failures.length} 个文件没检查成（上述结果不完整）：`,
+    ...failures.map(f => `    ${f}`),
+  ]
 }
 
 /** `register` 收到的插件选项。本插件没在 plugin.json 里声明，通常拿不到东西 */

@@ -61,9 +61,13 @@ export async function guardFiles(files: string[], cwd: string): Promise<GuardRes
   const reports: CheckReport[] = []
   const failures: string[] = []
 
+  // 在循环外读一次：key 来自环境变量或磁盘上的 .env，
+  // 每个文件重读一遍既是白花 IO，也让这个依赖的来处散在循环里
+  const apiKey = loadApiKey(cwd)
+
   for (const file of unique) {
     try {
-      const report = await checkFile(file, { apiKey: loadApiKey(cwd) })
+      const report = await checkFile(file, { apiKey })
       if (report.violations.length > 0) {
         reports.push(report)
       }
