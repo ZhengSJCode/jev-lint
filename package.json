@@ -1,0 +1,24 @@
+{
+  "name": "jev-guard",
+  "version": "0.1.0",
+  "private": true,
+  "description": "用 TypeSafe jev 逐函数审查代码规范，以 Claude Code hook 的形式在写码时自动介入",
+  "type": "module",
+  "bin": {
+    "jev-guard": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p ./",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "check:types": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.hooks.json"
+  },
+  "dependencies": {
+    "@typesafe-ai/sdk": "^0.6.0",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.14",
+    "@types/node": "^22.0.0"
+  }
+}

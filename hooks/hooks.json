@@ -1,0 +1,4 @@
+{
+  "description": "turn.complete 时用 jev 审这一轮改动的文件（改动文件的来源策略见 hooks/sources/）",
+  "modules": ["./register.ts"]
+}

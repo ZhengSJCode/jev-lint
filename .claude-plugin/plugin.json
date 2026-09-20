@@ -1,0 +1,8 @@
+{
+  "name": "jev-guard",
+  "version": "0.1.0",
+  "description": "用 TypeSafe jev 逐函数审查代码规范：一轮结束时审这一轮改过的文件，把违规写在该轮回答的下方。规则定义在 rules.md 里。",
+  "author": {
+    "name": "zhengshuaijie"
+  }
+}
