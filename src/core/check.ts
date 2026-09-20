@@ -153,7 +153,9 @@ function toViolations(
   const out: Violation[] = []
   for (const rule of rules) {
     const confidence = scores[rule.id]
-    if (confidence >= lines.warning) {
+    // 规则自己声明了就用自己的线，没有才落到全局的 warning 线
+    const bar = rule.threshold ?? lines.warning
+    if (confidence >= bar) {
       out.push({
         ruleId: rule.id,
         title: rule.title,

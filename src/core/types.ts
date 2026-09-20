@@ -22,6 +22,14 @@ export interface Rule {
    */
   scope: RuleScope
   /**
+   * 这条规则自己的判定线，覆盖全局的 warning 线。
+   *
+   * 每条规则的概率分布不一样：srp 的真命中落在 0.69~0.87、编排函数的误报在 0.05~0.15，
+   * 而 stringly-typed 的真命中是 0.96、误报却有 0.74~0.88。一条全局线分不开这两类 ——
+   * 要么漏掉 srp 该报的，要么把 stringly-typed 的误报全放进来。
+   */
+  threshold?: number
+  /**
    * 向 jev 提的问题。**措辞即口径** ——
    * 问「是否违反单一职责」得到的是违规概率，问「是否只做一件事」得到的是合规概率，
    * 两者互补但阈值方向相反。改这句话必须同步改 warningThreshold / errorThreshold 的含义。
