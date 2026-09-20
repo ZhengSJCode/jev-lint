@@ -46,8 +46,9 @@ export async function checkSource(
   fileName: string,
   options: GuardOptions,
 ): Promise<CheckReport> {
-  // 每次检查重读规则文件：用户改完 rules.md 下次运行就该生效，不该等重启
-  const { rules, rubric } = loadRules()
+  // 规则按被检查文件所在的项目取（`.claude/rules/` 向上找 + 用户级 + 包自带兜底），
+  // 每次检查重读：改完规则文件下次运行就该生效，不该等重启
+  const { rules, rubric } = loadRules(fileName)
   const fnRules = rules.filter(rule => rule.scope === 'function')
   const fileRules = rules.filter(rule => rule.scope === 'file')
 
