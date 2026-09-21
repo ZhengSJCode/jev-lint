@@ -6,10 +6,15 @@ import { askFile, askFunction, createClient } from './jev.js'
 import { loadRules } from './rules.js'
 import type { FnSlice, GuardOptions, Rule, Violation } from './types.js'
 
-/** 低于这条线连报都不报。实测 0.7 以下几乎全是噪音 */
-const DEFAULT_WARNING = 0.7
-/** 达到这条线是必须改。实测 0.9 以上只有真命中 */
-const DEFAULT_ERROR = 0.9
+/**
+ * 低于这条线连报都不报。实测 0.7 以下几乎全是噪音。
+ *
+ * 导出是给 CLI 的 `--warning` 默认值和 `--help` 文本用的：阈值只该有一处定义，
+ * 各写一份就会改一处漏一处，帮助文本还会跟实际行为对不上。
+ */
+export const DEFAULT_WARNING = 0.7
+/** 达到这条线是必须改。实测 0.9 以上只有真命中。CLI 的 `--error` 默认值同样取这里 */
+export const DEFAULT_ERROR = 0.9
 const DEFAULT_CONCURRENCY = 4
 const DEFAULT_MODEL = 'jev-latest'
 

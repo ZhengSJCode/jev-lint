@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import fs from 'node:fs'
 import type { CheckReport } from './core/check.js'
-import { checkFile, checkSource } from './core/check.js'
+import { checkFile, checkSource, DEFAULT_ERROR, DEFAULT_WARNING } from './core/check.js'
 import { loadApiKey } from './core/env.js'
 import { formatReport, toJson } from './core/format.js'
 
@@ -11,8 +11,8 @@ const USAGE = `用法: jev-guard <文件> [选项]
 选项:
   --stdin           从标准输入读代码，而不是读文件
   --name <path>     --stdin 时给它一个路径，供「文件位置」规则判断
-  --warning <n>     warning 线，达到才报，默认 0.7
-  --error <n>       error 线，达到即必须改，默认 0.9
+  --warning <n>     warning 线，达到才报，默认 ${DEFAULT_WARNING}
+  --error <n>       error 线，达到即必须改，默认 ${DEFAULT_ERROR}
   --model <name>    模型，默认 jev-latest
   --json            输出 JSON 而不是文本
   -h, --help        显示本帮助`
@@ -41,8 +41,8 @@ function parseArgs(argv: string[]): Args {
     file: '',
     name: '',
     stdin: false,
-    warning: 0.7,
-    error: 0.9,
+    warning: DEFAULT_WARNING,
+    error: DEFAULT_ERROR,
     model: 'jev-latest',
     json: false,
   }
