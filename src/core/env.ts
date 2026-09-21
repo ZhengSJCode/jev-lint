@@ -22,7 +22,7 @@ export function loadApiKey(startDir: string): string {
     }
   }
 
-  throw new Error('没找到 TYPESAFE_API_KEY：设环境变量，或在当前目录放 .env')
+  throw new Error('TYPESAFE_API_KEY not found: set the environment variable, or put a .env in the current directory')
 }
 
 /**

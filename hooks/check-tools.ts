@@ -20,12 +20,12 @@ export const TOOL_SPECS = [
   {
     name: 'check_file',
     description:
-      '用 jev 逐函数审查一个已存在的代码文件是否符合 rules.md 里的规范。' +
-      '返回分 error / warning 两档的结果；没有违规时会明说。适合改完一个文件后自查。',
+      'Audit an existing code file function by function with jev, against the rules in rules.md. ' +
+      'Returns results in two levels, error / warning; states it plainly when there are no violations. Good for a self-check right after editing a file.',
     inputSchema: {
       type: 'object',
       properties: {
-        file_path: { type: 'string', description: '文件的绝对路径' },
+        file_path: { type: 'string', description: 'absolute path to the file' },
       },
       required: ['file_path'],
     },
@@ -33,16 +33,16 @@ export const TOOL_SPECS = [
   {
     name: 'check_snippet',
     description:
-      '审查一段还没落盘的代码（刚想好的函数、还没写进文件的片段）。' +
-      '和 check_file 用同一套规则，但不要求文件存在。适合动手写之前先问一下。',
+      'Audit a piece of code that has not been written to disk yet (a function you just thought through, a snippet not yet saved). ' +
+      'Uses the same rules as check_file but does not require the file to exist. Good for asking before you start writing.',
     inputSchema: {
       type: 'object',
       properties: {
-        code: { type: 'string', description: '要审查的代码' },
+        code: { type: 'string', description: 'the code to audit' },
         file_name: {
           type: 'string',
           description:
-            '它打算放在哪个路径（如 src/order/tax.ts），用于「文件位置」规则；不给就跳过那条',
+            'the path it is intended for (e.g. src/order/tax.ts), used by the "file placement" rule; omit to skip that rule',
         },
       },
       required: ['code'],
@@ -81,7 +81,7 @@ export async function serveTool(request: ToolRequest): Promise<string> {
 
   // 失败也要说清楚原因：只回一句「没能给出结果」，模型和人都不知道
   // 是 key 过期了还是接口挂了，只能反复重试
-  return outcome.ok ? render(outcome.report) : `jev-lint 没能完成检查：${outcome.reason}`
+  return outcome.ok ? render(outcome.report) : `jev-lint could not complete the check: ${outcome.reason}`
 }
 
 function checkSnippetVia(request: ToolRequest) {
@@ -93,15 +93,15 @@ function checkSnippetVia(request: ToolRequest) {
 /** 工具返回的文本。没有违规时也明说，免得模型以为调用失败了 */
 function render(report: Report): string {
   if (report.violations.length === 0) {
-    const note = report.failures.length ? `（${report.failures.length} 项没问成）` : ''
-    return `${report.file}：未发现规范问题${note}`
+    const note = report.failures.length ? `(${report.failures.length} items could not be asked)` : ''
+    return `${report.file}: no violations found${note}`
   }
 
   // 分两档：error 是必须改的，warning 只是建议看。混着列会让模型分不清该动哪个
   const groups = (['error', 'warning'] as const).flatMap(severity => {
     const group = report.violations.filter(v => v.severity === severity)
     if (group.length === 0) return []
-    const label = severity === 'error' ? '必须改' : '建议看'
+    const label = severity === 'error' ? 'must fix' : 'worth a look'
     return [
       `  ${severity}（${label}）`,
       ...group.map(v => {
@@ -111,5 +111,5 @@ function render(report: Report): string {
     ]
   })
 
-  return [`${report.file}：命中 ${report.violations.length} 条`, ...groups].join('\n')
+  return [`${report.file}: ${report.violations.length} hits`, ...groups].join('\n')
 }

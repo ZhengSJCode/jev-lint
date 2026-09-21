@@ -75,7 +75,7 @@ async function stopCwd(): Promise<string | null> {
 function report(reports: CheckReport[], failures: string[]): void {
   if (reports.length === 0) {
     if (failures.length > 0) {
-      emitContext('Stop', `jev-lint 没能检查成任何文件：\n  ${failures.join('\n  ')}`)
+      emitContext('Stop', `jev-lint could not check any file:\n  ${failures.join('\n  ')}`)
     }
     return
   }
@@ -87,7 +87,7 @@ function report(reports: CheckReport[], failures: string[]): void {
   const canBlock = reports.some(r => r.violations.some(v => v.severity === 'error'))
 
   if (canBlock) {
-    writeBlock(`${text}\n（以上由 jev-lint 逐函数检查得出）`)
+    writeBlock(`${text}\n(the above comes from jev-lint's function-by-function check)`)
   } else {
     emitContext('Stop', text)
   }

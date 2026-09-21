@@ -116,7 +116,7 @@ async function checkWholeFile(
     }
   } catch (error) {
     const reason = error instanceof Error ? error.message : String(error)
-    return { violations: [], failure: [`${fileName}（文件级）: ${reason}`] }
+    return { violations: [], failure: [`${fileName} (file level): ${reason}`] }
   }
 }
 

@@ -227,12 +227,12 @@ function render(reports: Report[], scanned: number, failures: string[] = []): st
   }
 
   return [
-    `jev-lint 审了 ${scanned} 个改动文件，命中 ${hits.length} 条：`,
+    `jev-lint audited ${scanned} changed files, ${hits.length} hits:`,
     // 分两档列：error 是必须改的，warning 只是建议看
-    ...renderSeverity(hits, 'error', '必须改'),
-    ...renderSeverity(hits, 'warning', '建议看'),
+    ...renderSeverity(hits, 'error', 'must fix'),
+    ...renderSeverity(hits, 'warning', 'worth a look'),
     ...renderFailures(failures),
-    '（以上由 jev-lint 逐函数检查得出，规则见 rules.md）',
+    '(the above comes from jev-lint\'s function-by-function check; rules are in rules.md)',
   ].join('\n')
 }
 
@@ -257,7 +257,7 @@ function renderFailures(failures: string[]): string[] {
     return []
   }
   return [
-    `  ! ${failures.length} 个文件没检查成（上述结果不完整）：`,
+    `  ! ${failures.length} files could not be checked (the results above are incomplete):`,
     ...failures.map(f => `    ${f}`),
   ]
 }

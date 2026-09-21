@@ -5,17 +5,17 @@ import { checkFile, checkSource, DEFAULT_ERROR, DEFAULT_WARNING } from './core/c
 import { loadApiKey } from './core/env.js'
 import { formatReport, toJson } from './core/format.js'
 
-const USAGE = `用法: jev-lint <文件> [选项]
-      cat foo.ts | jev-lint --stdin --name src/foo.ts
+const USAGE = `Usage: jev-lint <file> [options]
+       cat foo.ts | jev-lint --stdin --name src/foo.ts
 
-选项:
-  --stdin           从标准输入读代码，而不是读文件
-  --name <path>     --stdin 时给它一个路径，供「文件位置」规则判断
-  --warning <n>     warning 线，达到才报，默认 ${DEFAULT_WARNING}
-  --error <n>       error 线，达到即必须改，默认 ${DEFAULT_ERROR}
-  --model <name>    模型，默认 jev-latest
-  --json            输出 JSON 而不是文本
-  -h, --help        显示本帮助`
+Options:
+  --stdin           read code from stdin instead of a file
+  --name <path>     with --stdin, give it a path for the "file placement" rule
+  --warning <n>     warning line, report at or above it, default ${DEFAULT_WARNING}
+  --error <n>       error line, at or above it must be fixed, default ${DEFAULT_ERROR}
+  --model <name>    model, default jev-latest
+  --json            emit JSON instead of text
+  -h, --help        show this help`
 
 interface Args {
   file: string
@@ -31,7 +31,7 @@ interface Args {
 function readThreshold(raw: string | undefined, flag: string): number {
   const value = Number(raw)
   if (!Number.isFinite(value)) {
-    throw new Error(`${flag} 需要一个数字，收到「${raw ?? ''}」`)
+    throw new Error(`${flag} expects a number, got "${raw ?? ''}"`)
   }
   return value
 }
@@ -65,7 +65,7 @@ function parseArgs(argv: string[]): Args {
       // 多余的裸参数直接报错，不静默覆盖：静默的话 `jev-lint a.ts b.ts`
       // 只会审 b.ts，而人以为两个都审了
       if (args.file) {
-        throw new Error(`多余的参数「${arg}」：一次只审一个文件`)
+        throw new Error(`unexpected argument "${arg}": only one file per run`)
       }
       args.file = arg
     }
@@ -93,7 +93,7 @@ function resolveArgs(argv: string[]): Args {
 
   const args = parseArgs(argv)
   if (!args.stdin && !args.file) {
-    console.error('缺少参数\n\n' + USAGE)
+    console.error('missing arguments\n\n' + USAGE)
     process.exit(1)
   }
   return args
@@ -111,7 +111,7 @@ function resolveArgs(argv: string[]): Args {
  */
 function exitCodeFor(report: CheckReport): number {
   if (report.failures.length > 0) {
-    console.error(`有 ${report.failures.length} 项没检查成，结果不完整：`)
+    console.error(`${report.failures.length} items could not be checked, results are incomplete:`)
     for (const failure of report.failures.slice(0, 3)) {
       console.error(`  ${failure}`)
     }

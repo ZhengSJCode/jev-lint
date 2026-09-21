@@ -7,11 +7,11 @@ import type { CheckReport } from './check.js'
  * 硬编一段模板话术就是拿模型的名义说它没说过的话。
  */
 export function formatReport(report: CheckReport): string {
-  const header = `jev-lint  ${report.file}  (${report.functions} 个函数)`
+  const header = `jev-lint  ${report.file}  (${report.functions} functions)`
 
   if (report.violations.length === 0) {
-    const note = report.failures.length ? `（${report.failures.length} 个函数没问成）` : ''
-    return `${header}\n  未发现规范问题${note}`
+    const note = report.failures.length ? `(${report.failures.length} functions could not be asked)` : ''
+    return `${header}\n  no violations found${note}`
   }
 
   const parts = [header]
@@ -22,7 +22,7 @@ export function formatReport(report: CheckReport): string {
     const group = report.violations.filter(v => v.severity === severity)
     if (group.length === 0) continue
 
-    const label = severity === 'error' ? '必须改' : '建议看'
+    const label = severity === 'error' ? 'must fix' : 'worth a look'
     parts.push(`\n  ${severity}（${label}）`)
     for (const v of group) {
       const range = `L${v.startLine}-${v.endLine}`
@@ -33,7 +33,7 @@ export function formatReport(report: CheckReport): string {
   }
 
   if (report.failures.length) {
-    parts.push(`\n  ! 未问成：${report.failures.slice(0, 3).join(' | ')}`)
+    parts.push(`\n  ! not asked: ${report.failures.slice(0, 3).join(' | ')}`)
   }
   return parts.join('\n')
 }
@@ -51,7 +51,7 @@ export function toJson(report: CheckReport): string {
 export function formatReports(reports: CheckReport[], failures: string[] = []): string {
   const parts = reports.map(formatReport)
   if (failures.length) {
-    parts.push(`  ! ${failures.length} 个函数没问成：${failures.slice(0, 3).join(' | ')}`)
+    parts.push(`  ! ${failures.length} functions could not be asked: ${failures.slice(0, 3).join(' | ')}`)
   }
   return parts.join('\n')
 }

@@ -88,14 +88,14 @@ async function safeRun(
 function parse(result: { exitCode: number; stdout: string; stderr: string }): CheckOutcome {
   // CLI 约定：有 error 级违规退 1，没违规退 0，其余是它自己出错
   if (result.exitCode !== 0 && result.exitCode !== 1) {
-    const detail = tail(result.stderr) || tail(result.stdout) || `退出码 ${result.exitCode}`
+    const detail = tail(result.stderr) || tail(result.stdout) || `exit code ${result.exitCode}`
     return { ok: false, reason: detail }
   }
 
   try {
     return { ok: true, report: JSON.parse(result.stdout) as Report }
   } catch {
-    return { ok: false, reason: `输出不是合法 JSON：${tail(result.stdout)}` }
+    return { ok: false, reason: `output is not valid JSON: ${tail(result.stdout)}` }
   }
 }
 
