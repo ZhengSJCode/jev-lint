@@ -7,7 +7,7 @@ import type { FileSource } from './sources/index.js'
 import { isCodeFile, makeSource } from './sources/index.js'
 
 /**
- * jev-guard 作为 Claude Code mod 的入口 —— 两种形态都在这里挂上。
+ * jev-lint 作为 Claude Code mod 的入口 —— 两种形态都在这里挂上。
  *
  * 自动（hook）：
  *   `tool.call`      累积这一轮被编辑的文件，或响应模型对我们工具的调用
@@ -18,7 +18,7 @@ import { isCodeFile, makeSource } from './sources/index.js'
  *
  * 「这一轮改了哪些文件」由 hooks/sources/ 下的策略决定，插件选项 `fileSource` 切换。
  * 配置**不在** `register` 的第二个参数里 —— 那是 plugin.json 里声明的插件默认值，
- * 本插件没声明；用户配置在 `settings.pluginConfigs["jev-guard"].options`，要在
+ * 本插件没声明；用户配置在 `settings.pluginConfigs["jev-lint"].options`，要在
  * session.start 时从 `$` 读。
  *
  * 每个 hook 注册在各自的函数里，而不是都堆在 register 里：那样 register
@@ -27,7 +27,7 @@ import { isCodeFile, makeSource } from './sources/index.js'
  */
 
 /** 与 .claude-plugin/plugin.json 的 name 一致，用来定位 settings 里自己的那一段 */
-const PLUGIN_NAME = 'jev-guard'
+const PLUGIN_NAME = 'jev-lint'
 
 /** 改动文件的工具。取自官方 diff mod 的 EDITING_TOOLS —— 没有 MultiEdit，它已不存在 */
 const EDITING_TOOLS = ['Edit', 'Write', 'NotebookEdit'] as const
@@ -227,12 +227,12 @@ function render(reports: Report[], scanned: number, failures: string[] = []): st
   }
 
   return [
-    `jev-guard 审了 ${scanned} 个改动文件，命中 ${hits.length} 条：`,
+    `jev-lint 审了 ${scanned} 个改动文件，命中 ${hits.length} 条：`,
     // 分两档列：error 是必须改的，warning 只是建议看
     ...renderSeverity(hits, 'error', '必须改'),
     ...renderSeverity(hits, 'warning', '建议看'),
     ...renderFailures(failures),
-    '（以上由 jev-guard 逐函数检查得出，规则见 rules.md）',
+    '（以上由 jev-lint 逐函数检查得出，规则见 rules.md）',
   ].join('\n')
 }
 

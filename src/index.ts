@@ -5,8 +5,8 @@ import { checkFile, checkSource, DEFAULT_ERROR, DEFAULT_WARNING } from './core/c
 import { loadApiKey } from './core/env.js'
 import { formatReport, toJson } from './core/format.js'
 
-const USAGE = `用法: jev-guard <文件> [选项]
-      cat foo.ts | jev-guard --stdin --name src/foo.ts
+const USAGE = `用法: jev-lint <文件> [选项]
+      cat foo.ts | jev-lint --stdin --name src/foo.ts
 
 选项:
   --stdin           从标准输入读代码，而不是读文件
@@ -62,7 +62,7 @@ function parseArgs(argv: string[]): Args {
     } else if (arg === '--model') {
       args.model = argv[++i]
     } else if (!arg.startsWith('-')) {
-      // 多余的裸参数直接报错，不静默覆盖：静默的话 `jev-guard a.ts b.ts`
+      // 多余的裸参数直接报错，不静默覆盖：静默的话 `jev-lint a.ts b.ts`
       // 只会审 b.ts，而人以为两个都审了
       if (args.file) {
         throw new Error(`多余的参数「${arg}」：一次只审一个文件`)

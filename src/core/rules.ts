@@ -89,7 +89,7 @@ function markdownUnder(dir: string): string[] {
 /**
  * 加载规则。
  *
- * `fromPath` 给被检查的文件路径 —— 规则按**它所在的项目**取，而不是按 jev-guard
+ * `fromPath` 给被检查的文件路径 —— 规则按**它所在的项目**取，而不是按 jev-lint
  * 装在哪。不给就用当前工作目录。
  */
 export function loadRules(fromPath?: string): RuleSet {

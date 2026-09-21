@@ -1,4 +1,4 @@
-# jev-guard
+# jev-lint
 
 用 TypeSafe 的 jev 逐函数审查代码规范。规则写在 `rules.md` 里，作为 Claude Code mod 在一轮结束时自动审这一轮改过的文件。
 
@@ -95,7 +95,7 @@ CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir /Volumes/Lenovo/code/jev
 |---|---|
 | `session.start` | 注册 `check_file` / `check_snippet` 两个工具（模型主动调的形态） |
 | `tool.call`（`Edit` / `Write` / `NotebookEdit`） | 只把被编辑的文件路径记下来，微秒级，不做判断 |
-| `tool.call`（`mcp__jev-guard__*`） | 模型调上面那两个工具时执行检查 |
+| `tool.call`（`mcp__jev-lint__*`） | 模型调上面那两个工具时执行检查 |
 | `turn.complete` | 一轮结束，把记下的攒一起审一遍，命中写在该轮回答的下方 |
 
 **为什么这比 settings hook 准**：它审的是**这一轮真正被编辑的文件**。settings hook 只能靠 `git status` 猜，看到的是工作区里所有历史未提交改动 —— 聊天轮里有旧改动也会被误审。
@@ -120,7 +120,7 @@ CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir /Volumes/Lenovo/code/jev
 ```json
 {
   "pluginConfigs": {
-    "jev-guard": {
+    "jev-lint": {
       "options": { "fileSource": "git-diff" }
     }
   }

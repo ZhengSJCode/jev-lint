@@ -1,11 +1,11 @@
 {
-  "name": "jev-guard",
+  "name": "jev-lint",
   "version": "0.1.0",
   "private": true,
   "description": "用 TypeSafe jev 逐函数审查代码规范，以 Claude Code hook 的形式在写码时自动介入",
   "type": "module",
   "bin": {
-    "jev-guard": "dist/index.js"
+    "jev-lint": "dist/index.js"
   },
   "scripts": {
     "build": "tsc -p ./",

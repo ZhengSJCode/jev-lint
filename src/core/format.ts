@@ -7,7 +7,7 @@ import type { CheckReport } from './check.js'
  * 硬编一段模板话术就是拿模型的名义说它没说过的话。
  */
 export function formatReport(report: CheckReport): string {
-  const header = `jev-guard  ${report.file}  (${report.functions} 个函数)`
+  const header = `jev-lint  ${report.file}  (${report.functions} 个函数)`
 
   if (report.violations.length === 0) {
     const note = report.failures.length ? `（${report.failures.length} 个函数没问成）` : ''

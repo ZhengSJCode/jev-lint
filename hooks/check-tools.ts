@@ -14,7 +14,7 @@ import { checkFileViaCli, checkSnippetViaCli } from './run-cli.js'
  */
 
 /** 与 .claude-plugin/plugin.json 的 name 一致 —— 工具全名靠它拼出来 */
-const PLUGIN_NAME = 'jev-guard'
+const PLUGIN_NAME = 'jev-lint'
 
 export const TOOL_SPECS = [
   {
@@ -81,7 +81,7 @@ export async function serveTool(request: ToolRequest): Promise<string> {
 
   // 失败也要说清楚原因：只回一句「没能给出结果」，模型和人都不知道
   // 是 key 过期了还是接口挂了，只能反复重试
-  return outcome.ok ? render(outcome.report) : `jev-guard 没能完成检查：${outcome.reason}`
+  return outcome.ok ? render(outcome.report) : `jev-lint 没能完成检查：${outcome.reason}`
 }
 
 function checkSnippetVia(request: ToolRequest) {
